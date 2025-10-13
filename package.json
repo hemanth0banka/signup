@@ -1,19 +1,21 @@
 {
-  "name": "signup",
+  "name": "expense",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon npm app.js"
+    "start": "nodemon node app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
-    "mysql2": "^3.15.2",
+    "fs": "^0.0.1-security",
+    "mysql2": "^3.15.1",
     "path": "^0.12.7",
     "sequelize": "^6.37.7"
   },

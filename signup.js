@@ -1,17 +1,17 @@
 document.querySelector('form').addEventListener('submit',async (event)=>{
+    
     try
     {
         event.preventDefault()
-        let a = await axios.post('/create',{
+        await axios.post('/register',{
             name : event.target.name.value,
             password : event.target.password.value
         })
-        console.log(a)
-        window.location.href = 'http://localhost:1000/index.html'
+        console.log("hii")
+        window.location.href = "http://localhost:1000/login.html"
     }
     catch(e)
     {
-        document.write(e)
         console.log(e)
     }
 })
