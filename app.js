@@ -20,10 +20,26 @@ app.post('/',async (req,res)=>{
         console.log(e)
     }
 })
+app.post('/login',async (req,res)=>{
+    try
+    {
+        let n = await signup.findOne({
+            where : {
+                name : req.body.name
+            }
+        })
+        res.status(200).send(n)
+
+    }
+    catch(e)
+    {
+        console.log(e)
+    }
+})
 app.use((req,res)=>{
     res.status(404).send('Page not Found...')
 })
-sequelize.sync({force:true}).then(()=>{
+sequelize.sync({alter:true}).then(()=>{
     app.listen(port,()=>{
     console.log(`listening at http://localhost:${port}`)
 })}).catch(e=>console.log(e))
