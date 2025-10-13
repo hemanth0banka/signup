@@ -1,45 +1,104 @@
 const express = require('express')
 const app = express()
-const cors = require('cors')
+const db = require('./db.js')
+const model = require('./model.js')
+const path = require('path')
 const port = 1000
-const sequelize = require('./db.js')
-const signup = require('./model.js')
+const cors = require('cors')
+const bcrypt = require('bcrypt')
+app.use(express.static(path.join(__dirname,"public")))
 app.use(express.json())
 app.use(cors())
-app.get('/',(req,res)=>{
-    res.status(200).send('<html><body><h1>Sign Up Success</h1></body></html>')
+app.post('/create',async (req,res)=>{
+    try
+    {
+        await bcrypt.hash(req.body.password,10,async (err,hash)=>{
+            if(!err)
+            {
+                try
+                {
+                    let a = await model.create({
+                        name : req.body.name,
+                        password : hash
+                    })
+                    res.status(200).send(a)
+                }
+                catch(e)
+                {
+                    console.log(e)
+                }
+                
+            }
+            else
+            {
+                res.status(500).send(err)
+            }
+        })
+    }
+    catch(e)
+    {
+        console.log(e)
+    }
+})
+app.get('/',async (req,res)=>{
+    try
+    {
+        res.status(200).sendFile(path.join(__dirname,"/public","/index.html"))
+    }
+    catch(e)
+    {
+        res.status(200).send(e)
+    }
 })
 app.post('/',async (req,res)=>{
     try
     {
-        let r = await signup.create(req.body)
-        res.status(201).send(r)
-    }
-    catch(e)
-    {
-        console.log(e)
-    }
-})
-app.post('/login',async (req,res)=>{
-    try
-    {
-        let n = await signup.findOne({
+        let r = await model.findOne({
             where : {
                 name : req.body.name
             }
         })
-        res.status(200).send(n)
-
+                if(!r)
+                {
+                    res.status(200).send('user not found')
+                }
+                else
+                {
+                    try
+                    {
+                        bcrypt.compare(req.body.password,r.password,(err,result)=>{
+                            if(err)
+                            {
+                                res.status(200).send(err)
+                            }
+                            else
+                            {
+                                if(result)
+                                {
+                                    res.status(200).send('login success')
+                                }
+                                else
+                                {
+                                    res.status(200).send('incorrect password')
+                                }
+                            }
+                        })
+                    }
+                    catch(e)
+                    {
+                        console.log(e)
+                    }
+                }
     }
     catch(e)
     {
-        console.log(e)
+        res.status(500).send(e)
     }
 })
 app.use((req,res)=>{
-    res.status(404).send('Page not Found...')
+    res.status(404).send('<html><body>Page not Found...</body></html>')
 })
-sequelize.sync({alter:true}).then(()=>{
-    app.listen(port,()=>{
-    console.log(`listening at http://localhost:${port}`)
-})}).catch(e=>console.log(e))
+db.sync({alter:true}).then(
+    app.listen(port ,()=>{
+    console.log("server running")
+})).catch(e=>{console.log(e)})
