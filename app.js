@@ -6,8 +6,12 @@ const sequelize = require('./db.js')
 const expense = require('./model/task.js')
 const persons = require('./model/persons.js')
 const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
+const port = 1000
 
-let port = 1000
+persons.hasOne(expense)
+expense.belongsTo(persons)
+
 app.use(express.json())
 app.use(cors())
 app.use(express.static(path.join(__dirname,'public')))
@@ -33,7 +37,10 @@ app.post('/register',async (req,res)=>{
                         name : req.body.name,
                         password : result
                     })
-                    res.status(200).send(a)
+                    res.status(200).json({
+                        message : `user Created Successfully`,
+                        data : a
+                    })
                 }
                 catch(e)
                 {
@@ -57,7 +64,9 @@ app.post('/login',async (req,res)=>{
         })
         if(!r)
         {
-            res.status(404).send('user not found')
+            res.status(404).json({
+                message : 'user not found',
+            })
         }
         else
         {
@@ -66,17 +75,28 @@ app.post('/login',async (req,res)=>{
                 bcrypt.compare(req.body.password,r.password,(err,result)=>{
                     if(err)
                     {
-                        res.status(500).send('something went wrong')
+                        res.status(500).json({
+                            message : 'wrong or invalid password',
+                            data : err
+                        })
                     }
                     else
+
                     {
                         if(result)
                         {
-                            res.status(200).send(result)
+                            const token = jwt.sign({userId : r.userId,name : r.name},'securitykey')
+                            res.status(200).json({
+                                message : 'Login Success',
+                                data : result,
+                                token : token
+                            })
                         }
                         else
                         {
-                            res.status(400).send('wrong password')
+                            res.status(400).json({
+                                message : 'Wrong or Invalid Password',
+                            })
                         }
                     }
                 })
@@ -95,7 +115,14 @@ app.post('/login',async (req,res)=>{
 app.get('/task',async (req,res)=>{
     try
     {
-        let data = await expense.findAll()
+        let token = req.headers.authorization?.split(' ')[1]
+        let id = jwt.verify(token,'securitykey')
+        let userId = id.userId
+        let data = await expense.findAll({
+            where : {
+                personUserId : userId
+            }
+        })
         res.status(200).json(data)
     }
     catch(e)
@@ -107,10 +134,13 @@ app.post('/task',async (req,res)=>{
     try
     {
         let {amount,description,category} = req.body
+        let token = req.headers.authorization?.split(' ')[1]
+        let userId = jwt.verify(token,'securitykey')
         let data = await expense.create({
             amount : amount,
             description : description,
-            category : category
+            category : category,
+            personUserId :  userId.userId
         })
         res.status(201).json(data)
     }

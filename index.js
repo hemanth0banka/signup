@@ -34,7 +34,9 @@ window.addEventListener('load',async (event)=>{
     event.preventDefault()
     try
     {
-        let data = await axios.get("/task")
+        let data = await axios.get("/task",{headers : {
+            Authorization : ` Bearer ${localStorage.getItem('token')}`
+        }})
         f(data.data)
     }
     catch(e)
@@ -49,8 +51,12 @@ document.querySelector("form").addEventListener("submit",async (e)=>{
         let data = await axios.post('/task',{
             amount : e.target.n1.value,
             description : e.target.n2.value,
-            category : e.target.n3.value
+            category : e.target.n3.value},{
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
         })
+        
         fobj(data.data)
     }
     catch(e)
